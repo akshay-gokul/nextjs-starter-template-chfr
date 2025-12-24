@@ -5,30 +5,42 @@ type CacheResponse = {
   value: number;
 };
 
-async function getCacheValue(): Promise<{ data?: CacheResponse; error?: string }> {
+type CacheResult = {
+  data?: CacheResponse;
+  error?: string;
+  status?: number;
+};
+
+async function getCacheValue(): Promise<CacheResult> {
+  const url =
+    "https://project-rainfall-117367875.development.localcatalystserverless.com/server/test/cache";
+
   try {
-    const res = await fetch(
-      "https://project-rainfall-117367875.development.localcatalystserverless.com/server/test/cache",
-      {
-        next: { revalidate: 30 },
-      }
-    );
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Accept: "application/json" },
+      next: { revalidate: 30 },
+    });
 
     if (!res.ok) {
-      return { error: `Upstream error ${res.status}` };
+      const text = await res.text();
+      const msg = `Upstream error ${res.status}${text ? `: ${text}` : ""}`;
+      console.error(msg);
+      return { status: res.status, error: msg };
     }
 
     const data = (await res.json()) as CacheResponse;
     return { data };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("Fetch failed:", message);
     return { error: message };
   }
 }
 
 export default async function Home() {
   const generatedAt = new Date().toISOString();
-  const { data, error } = await getCacheValue();
+  const { data, error, status } = await getCacheValue();
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] flex items-center justify-center p-8">
@@ -53,7 +65,10 @@ export default async function Home() {
             </div>
           )}
           {error && (
-            <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>
+            <div className="text-red-600 dark:text-red-400 text-sm">
+              {status && <span className="font-semibold">Status {status}: </span>}
+              {error}
+            </div>
           )}
         </div>
       </div>
