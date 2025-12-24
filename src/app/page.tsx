@@ -17,7 +17,7 @@ async function getCacheValue(): Promise<CacheResult> {
 
   try {
     const res = await fetch(url, {
-      method: "POST",
+      method: "GET",
       headers: { Accept: "application/json" },
       next: { revalidate: 30 },
     });
