@@ -1,6 +1,6 @@
 import { ApiCaller } from "./ApiCaller";
 
-export const revalidate = 11;
+export const revalidate = 30;
 
 export default function Home() {
   const generatedAt = new Date().toISOString();
